@@ -3,13 +3,13 @@ using EmployeeManagement.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace EmployeeManagement.Controllers
 {
+    /// <summary>
+    /// 員工管理系統
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeeController : ControllerBase
@@ -23,70 +23,72 @@ namespace EmployeeManagement.Controllers
         }
 
         [HttpGet("GetEmployees")]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
-            var employees = this.employeeDbContext.Employees.ToList();
+            var employees = await this.employeeDbContext.Employees.ToListAsync();
 
             if (employees.Count == 0)
             {
-                return StatusCode(404, "No employee found");
+                return null;
             }
 
             return Ok(employees);
         }
 
         [HttpPost("CreateEmployee")]
-        public IActionResult Create([FromBody] CreateEmployeeViewModel input)
+        public async Task<IActionResult> Create([FromBody] CreateEmployeeViewModel input)
         {
-            var employee = new Employee();
-            employee.EmployeeId = input.EmployeeId;
-            employee.Name = input.Name;
-            employee.Dept = input.Dept;
+            var employee = new Employee()
+            {
+                EmployeeId = input.EmployeeId,
+                Name = input.Name,
+                Dept = input.Dept,
+            };
 
-            this.employeeDbContext.Employees.Add(employee);
-            this.employeeDbContext.SaveChanges();
+            await this.employeeDbContext.Employees.AddAsync(employee);
+            await this.employeeDbContext.SaveChangesAsync();
 
-            var employees = this.employeeDbContext.Employees.ToList();
+            var employees = await this.employeeDbContext.Employees.ToListAsync();
 
             return Ok(employees);
         }
 
         [HttpPut("UpdateEmployee")]
-        public IActionResult Update([FromBody] CreateEmployeeViewModel input)
+        public async Task<IActionResult> Update([FromBody] CreateEmployeeViewModel input)
         {
-            var employee = this.employeeDbContext.Employees.FirstOrDefault(e => e.EmployeeId == input.EmployeeId);
+            var employee = await this.employeeDbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == input.EmployeeId);
 
             if (employee == null)
             {
-                return StatusCode(404, "No employee found");
+                return null;
             }
 
             employee.EmployeeId = input.EmployeeId;
             employee.Name = input.Name;
             employee.Dept = input.Dept;
 
-            this.employeeDbContext.Entry(employee).State = EntityState.Modified;
-            this.employeeDbContext.SaveChanges();
+            this.employeeDbContext.Entry(employee).State= EntityState.Modified;
+            await this.employeeDbContext.SaveChangesAsync();
 
-            var employees = this.employeeDbContext.Employees.ToList();
+            var employees = await this.employeeDbContext.Employees.ToListAsync();
 
             return Ok(employees);
         }
 
         [HttpDelete("DeleteEmployee/{employeeId}")]
-        public IActionResult Delete([FromRoute]int employeeId)
+        public async Task<IActionResult> Delete([FromRoute]int employeeId)
         {
-            var employee = this.employeeDbContext.Employees.FirstOrDefault(e => e.EmployeeId == employeeId);
+            var employee = await this.employeeDbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
 
             if (employee == null)
             {
-                return StatusCode(404, "No employee found");
+                return null;
             }
 
             this.employeeDbContext.Entry(employee).State = EntityState.Deleted;
-            this.employeeDbContext.SaveChanges();
+            await this.employeeDbContext.SaveChangesAsync();
 
-            var employees = this.employeeDbContext.Employees.ToList();
+            var employees = await this.employeeDbContext.Employees.ToListAsync();
 
             return Ok(employees);
         }
